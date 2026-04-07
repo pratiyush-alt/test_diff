@@ -1,0 +1,17 @@
+FILE COMPARISON RESULT
+========================================
+
+ADDED LINES
+--------------------
+Line 25: AND tc.test_type IS DISTINCT FROM 'DTO' -- BBDAP-1162
+
+REMOVED LINES
+--------------------
+None
+
+MODIFIED LINES
+--------------------
+Line 28
+OLD → and date_val between '2025-08-01' and  '2025-09-30'
+NEW → and date_val between '2025-08-01' and  '2025-09-23'
+

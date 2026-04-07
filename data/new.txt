@@ -1,0 +1,35 @@
+WITH test_cancel AS (
+    select distinct CONCAT(tc.Test_short_name,' ',Test_code) as "test",
+    COUNT(distinct CASE WHEN vt.visit_test_status = 'Cancelled' THEN vt.visit_test_id END) AS "cancelled_nm", 
+    count(distinct visit_test_id) as "deno"
+   FROM dd_stg.sod.visit_test_result_f vt
+    left join
+        dd_stg.sod.Test_code_dm tc   ON tc.test_code_id = vt.test_code_id
+         left join dd_stg.sod.region_dm r on r.region_id=vt.region_id
+         left join dd_stg.sod.country_dm cn on vt.country_id=cn.country_id
+          left join dd_stg.sod.PROJECT_DM pj on vt.project_id=pj.project_id
+         left join dd_stg.sod.investigator_dm ins on ins.investigator_id=vt.investigator_id
+         left join dd_stg.sod.visit_description_dm vdm on vdm.visit_description_id=vt.visit_description_id
+         left join dd_stg.sod.test_group_dm tgd on tgd.test_group_id=vt.test_group_id
+         left join dd_stg.sod.cancel_code_dm cc on cc.cancel_code_id=vt.cancel_code_id
+        left join dd_stg.sod.date_dm ddm on ddm.date_id=vt.accession_specimen_received_date_id
+        where  wf_protocol_code in (
+        --'TEST SUE'
+       'Study Dash'
+        --'1997 SYSTEM',
+        --'DOBPED2'
+        --'1241.36'
+    )
+     and  pj.wf_project_status in('PLN', 'CUR')
+    and  tc.test_type  is distinct from 'CVD'
+	  AND tc.test_type IS DISTINCT FROM 'DTO' -- BBDAP-1162
+      -- and vt.administrative_test_flag is distinct from 'Y'--- when toggle is ON it means everything is there Y, N, null
+                                               -- when toggle is OFF it means ad should be excluded AD='Y"
+   -- and cc.specimen_not_received_flag is distinct from 'Y'
+    and date_val between '2025-08-01' and  '2025-09-23'  
+    group by  tc.Test_short_name,TC.TEST_CODE)
+            select "test",
+            "cancelled_nm", round(("cancelled_nm"::FLOAT / NULLIF("deno", 0))*100,1) as "percentage"
+            from test_cancel
+    where "percentage" not in (0)
+    order by "percentage"
